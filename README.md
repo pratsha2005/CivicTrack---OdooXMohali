@@ -14,11 +14,11 @@
 
 ## Screenshots
 ---
-### Login/Signin Page
+### Login/Sign-in Page
 ---
 ![Register Page](./Screenshots/5.jpg)
 ---
-### Create Account / Signup Page
+### Create Account / Sign-up Page
 ---
 ![Register Page](./Screenshots/6.jpg)
 ### Home Page

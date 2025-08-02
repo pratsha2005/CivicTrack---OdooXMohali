@@ -1,14 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
-import { MapPin, Camera, Send } from 'lucide-react';
+import { registerIssueRoute } from '../utils/APIRoutes';
+import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import axios from 'axios';
-import { registerIssueRoute } from '../utils/APIRoutes';
 
-
-// Fix for marker icons in Leaflet
+// Fix for missing marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -16,19 +15,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+const defaultCoords = { lat: 40.7128, lng: -74.0060 };
+
 function LocationMarker({ position, setPosition }) {
   const map = useMap();
 
   useMapEvents({
     click(e) {
       setPosition(e.latlng);
-      map.setView(e.latlng); // pan map
-    }
+      map.setView(e.latlng);
+    },
   });
 
   useEffect(() => {
     if (position) {
-      map.setView(position); // move to position on update
+      map.setView(position);
     }
   }, [position, map]);
 
@@ -43,7 +44,10 @@ export const ReportForm = ({ user }) => {
     location: '',
   });
 
-  const [mapPosition, setMapPosition] = useState(user?.location || { lat: 40.7128, lng: -74.0060 });
+  const [mapPosition, setMapPosition] = useState(
+    user?.location?.lat && user?.location?.lng ? user.location : defaultCoords
+  );
+
   const [imageFiles, setImageFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
 
@@ -57,8 +61,8 @@ export const ReportForm = ({ user }) => {
         params: {
           q: formData.location,
           format: 'json',
-          limit: 1
-        }
+          limit: 1,
+        },
       });
 
       if (response.data.length === 0) {
@@ -99,8 +103,8 @@ export const ReportForm = ({ user }) => {
       await axios.post(registerIssueRoute, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       toast.success('Issue reported successfully!');
@@ -111,7 +115,7 @@ export const ReportForm = ({ user }) => {
         location: '',
       });
       setImageFiles([]);
-      setMapPosition(user?.location || { lat: 40.7128, lng: -74.0060 });
+      setMapPosition(user?.location?.lat ? user.location : defaultCoords);
     } catch (err) {
       toast.error('Failed to submit issue.');
     } finally {
@@ -120,12 +124,12 @@ export const ReportForm = ({ user }) => {
   };
 
   const categories = [
-    { value: 'Roads', label: 'Roads & Transportation', icon: '🛣' },
-    { value: 'Cleanliness', label: 'Waste Management', icon: '🗑' },
-    { value: 'Water Supply', label: 'Water & Sewage', icon: '💧' },
-    { value: 'Lighting', label: 'Street Lighting', icon: '💡' },
-    { value: 'Public Safety', label: 'Public Safety', icon: '🌳' },
-    { value: 'Others', label: 'Other Issues', icon: '📋' }
+    { value: 'Roads', label: 'Roads & Transportation' },
+    { value: 'Cleanliness', label: 'Waste Management' },
+    { value: 'Water Supply', label: 'Water & Sewage' },
+    { value: 'Lighting', label: 'Street Lighting' },
+    { value: 'Public Safety', label: 'Public Safety' },
+    { value: 'Others', label: 'Other Issues' },
   ];
 
   return (
@@ -182,10 +186,12 @@ export const ReportForm = ({ user }) => {
           </div>
 
           <div className="h-64 border rounded overflow-hidden">
-            <MapContainer center={mapPosition} zoom={14} style={{ height: '100%', width: '100%' }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <LocationMarker position={mapPosition} setPosition={setMapPosition} />
-            </MapContainer>
+            {mapPosition?.lat && mapPosition?.lng && (
+              <MapContainer center={mapPosition} zoom={14} style={{ height: '100%', width: '100%' }}>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <LocationMarker position={mapPosition} setPosition={setMapPosition} />
+              </MapContainer>
+            )}
           </div>
 
           <input

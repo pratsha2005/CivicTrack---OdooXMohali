@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 import axios from 'axios';
 import { loginUserRoute, registerUserRoute } from '../utils/APIRoutes';
@@ -8,6 +8,13 @@ export const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isLogin = location.pathname === '/login'; // Determine mode by route
+
+  useEffect(()=>{
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate('/');
+    }
+  }, [])
 
   const [formData, setFormData] = useState({
     name: '',

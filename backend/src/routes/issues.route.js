@@ -21,5 +21,5 @@ router.route("/editIssue/:issueId").post(editIssueStatus)
 router.route("editIssue/:id").post(editIssue)
 router.route("/reportIssue/:id").post(reportIssue)
 router.route("/getIssueByUserId").get(verifyJWT, getIssuesByUserId)
-router.route("/deleteIssue/:id").post(deleteIssue)
+router.route("/deleteIssue/:id").delete(deleteIssue)
 export default router;

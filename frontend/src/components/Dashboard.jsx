@@ -2,37 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { IssueCard } from './IssueCard';
 import { Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
-import { getAllIssuesRoute } from '../utils/APIRoutes';
+import {  getAllIssuesRoute, getNearbyIssuesRoute } from '../utils/APIRoutes';
 
 export const Dashboard = ({ onIssueClick }) => {
   const [issues, setIssues] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [radius, setRadius] = useState(5);
   
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(getAllIssuesRoute);
-        console.log("📦 Response data:", res.data);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await axios.get(getAllIssuesRoute);
 
-        if (Array.isArray(res.data.data)) {
-          setIssues(res.data.data);
-        } else if (Array.isArray(res.data.issues)) {
-          setIssues(res.data.issues);
-        } else {
-          console.error("❌ Unexpected data format:", res.data);
-          setIssues([]);
-        }
-      } catch (err) {
-        console.error("❌ Axios error:", err.response?.data || err.message);
+      console.log("📦 Response data:", res.data);
+
+      if (Array.isArray(res.data.data)) {
+        setIssues(res.data.data);
+      } else if (Array.isArray(res.data.issues)) {
+        setIssues(res.data.issues);
+      } else {
+        console.error("❌ Unexpected data format:", res.data);
+        setIssues([]);
       }
-    };
+    } catch (err) {
+      console.error("❌ Axios error:", err.response?.data || err.message);
+    }
+  };
 
-    fetchData();
-  }, []);
-
+  fetchData(); // radius in km or miles depending on your backend
+}, []);
   const visibleIssues = issues.filter(issue => !issue.isHidden);
 
   const filteredIssues = visibleIssues.filter(issue => {
@@ -64,6 +66,12 @@ export const Dashboard = ({ onIssueClick }) => {
     { value: 'parks', label: 'Parks & Recreation' },
     { value: 'other', label: 'Other Issues' }
   ];
+const Distance = [
+  { value: 1, label: 'Within 1 km' },
+  { value: 3, label: 'Within 3 km' },
+  { value: 5, label: 'Within 5 km' }
+];
+
 
   const statuses = [
     { value: 'all', label: 'All Statuses' },
@@ -131,6 +139,17 @@ export const Dashboard = ({ onIssueClick }) => {
               </option>
             ))}
           </select>
+            {/* <select
+            value={radius}
+            onChange={(e) => setRadius(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            {Distance.map(distance => (
+              <option key={distance.value} value={distance.value}>
+                {distance.label}
+              </option>
+            ))}
+          </select> */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}

@@ -11,8 +11,37 @@ import {
   XCircle,
   Flag
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { reportSpamIssueRoute } from '../utils/APIRoutes';
 
-export const IssueDetail = ({ issue, onBack, onReportSpam }) => {
+export const IssueDetail = ({ issue }) => {
+
+const handleSpam = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(
+      `${reportSpamIssueRoute}/${issue._id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.status === 200 || response.data.success) {
+      alert("✅ Issue reported as spam successfully!");
+    } else {
+      alert("⚠️ Failed to report the issue.");
+    }
+  } catch (err) {
+    console.error("❌ Error reporting spam:", err.response?.data || err.message);
+    alert("❌ An error occurred while reporting the issue.");
+  }
+};
+
+
+  const navigate = useNavigate();
   const getStatusIcon = (status) => {
     switch (status) {
       case 'reported': return <AlertCircle className="h-5 w-5" />;
@@ -48,7 +77,7 @@ export const IssueDetail = ({ issue, onBack, onReportSpam }) => {
   return (
     <div className="max-w-4xl mx-auto">
       <button
-        onClick={onBack}
+        onClick={()=> navigate('/')}
         className="mb-6 flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -112,7 +141,7 @@ export const IssueDetail = ({ issue, onBack, onReportSpam }) => {
             <h2 className="text-lg font-semibold text-gray-900">Community Engagement</h2>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => onReportSpam(issue._id)}
+                onClick={handleSpam}
                 className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
               >
                 <Flag className="h-4 w-4" />

@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
 import { IssueCard } from './IssueCard';
 import { Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useEffect } from 'react';
 
-export const Dashboard = ({ issues, onIssueClick }) => {
+
+
+
+
+
+export const Dashboard = ({onIssueClick }) => {
+
+  const [issues,setIssues] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -43,6 +52,8 @@ export const Dashboard = ({ issues, onIssueClick }) => {
     { value: 'resolved', label: 'Resolved' },
     { value: 'closed', label: 'Closed' }
   ];
+
+  
 
   return (
     <div className="space-y-8">

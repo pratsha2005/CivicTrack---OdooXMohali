@@ -1,26 +1,27 @@
 import React, { useState } from 'react';
 import { MapPin, Camera, Send } from 'lucide-react';
 
-export const ReportForm = ({ onSubmit }) => {
+export const ReportForm = ({ onSubmit, user }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'roads',
     priority: 'medium',
-    location: '',
-    reportedBy: ''
+    location: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      reportedBy: user.name
+    });
     setFormData({
       title: '',
       description: '',
       category: 'roads',
       priority: 'medium',
-      location: '',
-      reportedBy: ''
+      location: ''
     });
   };
 
@@ -45,28 +46,10 @@ export const ReportForm = ({ onSubmit }) => {
       <div className="bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Report an Issue</h2>
-          <p className="text-gray-600 mt-2">
-            Help improve your community by reporting local issues
-          </p>
+          <p className="text-gray-600 mt-2">Help improve your community by reporting local issues</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Your Name
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.reportedBy}
-              onChange={(e) =>
-                setFormData({ ...formData, reportedBy: e.target.value })
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter your full name"
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Issue Title
@@ -75,9 +58,7 @@ export const ReportForm = ({ onSubmit }) => {
               type="text"
               required
               value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Brief description of the issue"
             />
@@ -92,9 +73,7 @@ export const ReportForm = ({ onSubmit }) => {
                 <button
                   key={category.value}
                   type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, category: category.value })
-                  }
+                  onClick={() => setFormData({ ...formData, category: category.value })}
                   className={`p-3 border rounded-lg text-left hover:bg-gray-50 transition-colors ${
                     formData.category === category.value
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -114,9 +93,7 @@ export const ReportForm = ({ onSubmit }) => {
             </label>
             <select
               value={formData.priority}
-              onChange={(e) =>
-                setFormData({ ...formData, priority: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               {priorities.map((priority) => (
@@ -137,9 +114,7 @@ export const ReportForm = ({ onSubmit }) => {
                 type="text"
                 required
                 value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Street address or nearby landmark"
               />
@@ -154,9 +129,7 @@ export const ReportForm = ({ onSubmit }) => {
               required
               rows={4}
               value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Provide detailed information about the issue..."
             />

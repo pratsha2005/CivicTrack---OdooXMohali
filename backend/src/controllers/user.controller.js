@@ -18,36 +18,45 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
+const registerUser = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
 
-const registerUser = asyncHandler( async (req, res) => {
-    
-  const {name, email, password} = req.body 
-
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    throw new ApiError(404, "User not found");
+  if ([name, email, password].some((field) => !field?.trim())) {
+    throw new ApiError(400, "All fields are required!");
   }
 
-  const validPassword = await user.isPasswordCorrect(password);
-  if (!validPassword) {
-    throw new ApiError(401, "Wrong password");
+  const existedUser = await User.findOne({ email });
+  if (existedUser) {
+    throw new ApiError(409, "User already exists");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+  const avatarLocalPath = req.files?.avatar?.[0]?.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Profile image is required!");
+  }
 
-  const loggedInUser = await User.findById(user._id).select("-passwordHash -refreshToken");
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar) {
+    throw new ApiError(400, "Profile image couldn't be uploaded");
+  }
 
-  const options = {
-    httpOnly: true,
-    secure: false
-  };
+  const user = await User.create({
+    name,
+    email,
+    passwordHash: password,
+    profileImageUrl: avatar.url,
+    location: {
+      type: "Point",
+      coordinates: [0, 0]
+    }
+  });
 
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, { user: loggedInUser, accessToken, refreshToken }, "Login successful"));
+  const createdUser = await User.findById(user._id).select("-passwordHash -refreshToken");
+  if (!createdUser) {
+    throw new ApiError(500, "Something went wrong while registering user");
+  }
+
+  return res.status(201).json(new ApiResponse(201, createdUser, "User created successfully!"));
 });
 
 const logoutUser = asyncHandler(async (req, res) => {

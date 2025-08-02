@@ -6,37 +6,52 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
-const registerIssues = asyncHandler(async(req, res) => {
-    const {
-      title,
-      description,
-      category,
-      coordinates,  // [longitude, latitude]
-      isAnonymous,
-      images
-    } = req.body;
+const registerIssues = asyncHandler(async (req, res) => {
+  const {
+    title,
+    description,
+    category,
+    coordinates,  // should be sent as a JSON stringified array in form-data
+    isAnonymous
+  } = req.body;
 
-    const issue = await Issue.create({
-      title,
-      description,
-      category,
-      location: {
-        type: 'Point',
-        coordinates
-      },
-      isAnonymous,
-      user: req.user._id,
-      images
-    });
+  // Basic validation
+  if (!title || !description || !category || !coordinates) {
+    throw new ApiError(400, "All fields are required");
+  }
 
-    const createdIssue = issue._id;
-    if(!createdIssue){
-        throw new ApiError(500, "Something went wrong while registering issue")
+  // Upload multiple images (max 5)
+  const uploadedImages = [];
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const uploaded = await uploadOnCloudinary(file.path);
+      if (uploaded?.url) uploadedImages.push(uploaded.url);
     }
-    res.status(201).json(
-        new ApiResponse(201, createdIssue, "Issue created successfully")
-    );
-})
+  }
+
+  // Create issue in DB
+  const issue = await Issues.create({
+    title,
+    description,
+    category,
+    location: {
+      type: "Point",
+      coordinates: JSON.parse(coordinates) // send as "[76.7284,30.7046]" in Postman
+    },
+    isAnonymous: isAnonymous === "true", // since form-data sends strings
+    user: req.user._id,
+    images: uploadedImages
+  });
+
+  if (!issue) {
+    throw new ApiError(500, "Something went wrong while registering issue");
+  }
+
+  res.status(201).json(
+    new ApiResponse(201, issue._id, "Issue created successfully")
+  );
+});
+
 
 const getAllIssues = asyncHandler(async (req, res) => {
   const issues = await Issue.find()

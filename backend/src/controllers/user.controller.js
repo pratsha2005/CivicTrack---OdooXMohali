@@ -210,6 +210,34 @@ const updateUserLocation = asyncHandler(async (req, res) => {
   );
 });
 
+const updateNameAndAvatar = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+
+  if (!name && !req.files?.avatar?.[0]?.path) {
+    throw new ApiError(400, "Please provide at least one field: name or avatar");
+  }
+
+  const updates = {};
+
+  if (name) updates.name = name;
+
+  if (req.files?.avatar?.[0]?.path) {
+    const uploaded = await uploadOnCloudinary(req.files.avatar[0].path);
+    if (!uploaded?.url) {
+      throw new ApiError(500, "Avatar upload failed");
+    }
+    updates.profileImageUrl = uploaded.url; // 🔁 corrected field name
+  }
+
+  const user = await User.findByIdAndUpdate(req.user._id, {
+    $set: updates
+  }, { new: true }).select("-password -refreshToken");
+
+  res.status(200).json(
+    new ApiResponse(200, user, "User profile updated successfully")
+  );
+});
+
 
 export {
   registerUser,
@@ -219,5 +247,6 @@ export {
   getCurrentUser,
   changePassword,
   updateDetails,
-  updateUserLocation
+  updateUserLocation,
+  updateNameAndAvatar
 };

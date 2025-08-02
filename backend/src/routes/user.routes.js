@@ -6,7 +6,9 @@ import {
   refreshAccessToken,
   changePassword, 
   getCurrentUser,
-  updateUserLocation 
+  updateUserLocation,
+  updateNameAndAvatar 
+
 } from '../controllers/user.controller.js';
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from '../middlewares/auth.middleware.js';
@@ -22,6 +24,13 @@ router.route("/register").post(
   ]),
   registerUser
 );
+
+router.route("/update-profile").patch(
+  verifyJWT,
+  upload.fields([{ name: "avatar", maxCount: 1 }]),
+  updateNameAndAvatar
+);
+
 
 router.route("/login").post(loginUser);
 

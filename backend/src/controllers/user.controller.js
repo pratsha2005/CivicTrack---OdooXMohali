@@ -18,52 +18,11 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
 
-  if ([name, email, password].some((field) => !field?.trim())) {
-    throw new ApiError(400, "All fields are required!");
-  }
+const registerUser = asyncHandler( async (req, res) => {
+    
+    const {fullName, username, email, password} = req.body //JSON data body mei ayega
 
-  const existedUser = await User.findOne({ email });
-  if (existedUser) {
-    throw new ApiError(409, "User already exists");
-  }
-
-  const avatarLocalPath = req.files?.avatar?.[0]?.path;
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Profile image is required!");
-  }
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  if (!avatar) {
-    throw new ApiError(400, "Profile image couldn't be uploaded");
-  }
-
-  const user = await User.create({
-    name,
-    email,
-    passwordHash: password,
-    profileImageUrl: avatar.url,
-    location: {
-      type: "Point",
-      coordinates: [0, 0]
-    }
-  });
-
-  const createdUser = await User.findById(user._id).select("-passwordHash -refreshToken");
-  if (!createdUser) {
-    throw new ApiError(500, "Something went wrong while registering user");
-  }
-
-  return res.status(201).json(new ApiResponse(201, createdUser, "User created successfully!"));
-});
-
-const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    throw new ApiError(400, "Email and password are required");
-  }
 
   const user = await User.findOne({ email });
   if (!user) {

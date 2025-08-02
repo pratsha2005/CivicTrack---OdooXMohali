@@ -181,6 +181,36 @@ const updateDetails = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, user, "User details updated successfully"));
 });
 
+const updateUserLocation = asyncHandler(async (req, res) => {
+  const { coordinates } = req.body; // expects: [longitude, latitude]
+
+  if (!coordinates || !Array.isArray(coordinates) || coordinates.length !== 2) {
+    throw new ApiError(400, "Coordinates must be an array: [longitude, latitude]");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        location: {
+          type: "Point",
+          coordinates
+        }
+      }
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, user, "Location updated successfully")
+  );
+});
+
+
 export {
   registerUser,
   loginUser,
@@ -188,5 +218,6 @@ export {
   refreshAccessToken,
   getCurrentUser,
   changePassword,
-  updateDetails
+  updateDetails,
+  updateUserLocation
 };

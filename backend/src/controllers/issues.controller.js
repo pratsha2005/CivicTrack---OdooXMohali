@@ -113,7 +113,53 @@ const getNearbyIssues = asyncHandler(async (req, res) => {
   });
 });
 
+const getIssuesByUserId = asyncHandler(async(req, res) => {
+  const {userId} = req.params
+  const issues = await Issue.find({ user: userId }).populate('user', '-passwordHash'); // populate without password
+  if(!issues){
+    throw new ApiError(500, 'No issues found')
+  }
+  res.status(200).json(
+    new ApiResponse(200, issues, 'Issues retrieved successfully')
+  );
+})
 
+const editIssue = asyncHandler(async(req, res) => {
+  const {id} = req.params
+  const {title, description, location} = req.body
+  const issue = await Issue.findById(id)
+  if(!issue){
+    throw new ApiError(404, 'Issue not found')
+  }
+  issue.title = title
+  issue.description = description
+  issue.location = location
+  await issue.save()
+  res.status(200).json(
+    new ApiResponse(200, issue, 'Issue updated successfully')
+  )
+})
+
+const reportIssue = asyncHandler(async(req, res) => {
+  const {id} = req.params
+  const {reason} = req.body
+  const issue = await Issue.findById(id)
+  if(!issue){
+    throw new ApiError(404, 'Issue not found')
+  }
+  issue.reports = issue.reports + 1
+  if(issue.reports >= 3){
+    issue.isHidden = true
+  }
+  await issue.save()
+  res.status(200).json(
+    new ApiResponse(200, issue, 'Issue reported successfully')
+  )
+
+})
+
+
+// admin
 const editIssueStatus = asyncHandler(async(req, res) => {
   const { issueId } = req.params;
   const { status } = req.body;
@@ -132,5 +178,8 @@ export {
     registerIssues,
     getAllIssues,
     getNearbyIssues,
-    editIssueStatus
+    editIssueStatus,
+    reportIssue,
+    editIssue,
+    getIssuesByUserId
 }

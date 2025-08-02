@@ -29,6 +29,7 @@ const issuesSchema = mongoose.Schema({
     coordinates: {
       type: [Number], // [longitude, latitude]
       required: true,
+      default: [0, 0],
       index: '2dsphere' // for geo-queries
     }
   },

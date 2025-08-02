@@ -114,8 +114,23 @@ const getNearbyIssues = asyncHandler(async (req, res) => {
 });
 
 
+const editIssueStatus = asyncHandler(async(req, res) => {
+  const { issueId } = req.params;
+  const { status } = req.body;
+  const issue = await Issues.findById(issueId);
+  if (!issue) {
+    throw new ApiError(500, "Something went wrong in getting issue")
+  }
+  issue.status = status;
+  await issue.save();
+  res.status(200).json(
+    new ApiResponse(200, "Issue status updated successfully")
+  )
+})
+
 export {
     registerIssues,
     getAllIssues,
-    getNearbyIssues
+    getNearbyIssues,
+    editIssueStatus
 }

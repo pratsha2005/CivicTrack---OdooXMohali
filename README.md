@@ -13,13 +13,30 @@
 
 
 ## Screenshots
-
+---
+### Login/Signin Page
+---
+![Register Page](./Screenshots/5.jpg)
+---
+### Create Account / Signup Page
+---
+![Register Page](./Screenshots/6.jpg)
+### Home Page
+---
 ![Register Page](./Screenshots/1.png)
+---
+### Profile Page
+---
 ![Register Page](./Screenshots/2.png)
+---
+### Edit Profile
+---
 ![Register Page](./Screenshots/3.png)
+---
+### Report Issue page
+---
 ![Register Page](./Screenshots/4.png)
-![Register Page](./Screenshots/5.png)
-![Register Page](./Screenshots/6.png)
+---
 
 ## 🚀 Features
 

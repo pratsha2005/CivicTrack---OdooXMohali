@@ -25,6 +25,10 @@
 ---
 ![Register Page](./Screenshots/1.png)
 ---
+### Report Issue page
+---
+![Register Page](./Screenshots/4.png)
+---
 ### Profile Page
 ---
 ![Register Page](./Screenshots/2.png)
@@ -33,10 +37,7 @@
 ---
 ![Register Page](./Screenshots/3.png)
 ---
-### Report Issue page
----
-![Register Page](./Screenshots/4.png)
----
+
 
 ## 🚀 Features
 

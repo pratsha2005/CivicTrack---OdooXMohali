@@ -1,13 +1,15 @@
 import express, { urlencoded } from "express";
 import cookieParser from "cookie-parser"; // to perform CRUD operation in user browser cookies
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config(); 
 
 const app = express();
 // cors middleware
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+  origin: process.env.CORS_ORIGIN,
+  credentials: true
+}));
 app.use(express.json({
     limit: '16kb'
 })) // to take data in form of json

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 import axios from 'axios';
 import { loginUserRoute, registerUserRoute } from '../utils/APIRoutes';
+import { useNavigate } from 'react-router-dom';
 
 export const Auth = ({ isLogin, onToggleMode }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,27 +16,28 @@ export const Auth = ({ isLogin, onToggleMode }) => {
     e.preventDefault();
 
     try {
-      const route = isLogin ? loginUserRoute : registerUserRoute;
-      const payload = isLogin
-        ? { email: formData.email, password: formData.password }
-        : formData;
+      const url = isLogin ? loginUserRoute : registerUserRoute;
 
-      const response = await axios.post(route, payload);
-
-      const { accessToken, user } = response.data.data;
+      const response = await axios.post(url, formData);
+      const { accessToken, refreshToken, user } = response.data.data;
 
       if (accessToken) {
         localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
-        alert("Success! You're logged in.");
+
+        console.log("Auth successful");
+        navigate("/"); // ✅ Redirect to home
       } else {
-        console.error("No access token received.");
+        console.error("No token received");
+        alert("Auth failed: No token received.");
       }
     } catch (error) {
-      console.error("Authentication failed:", error.response?.data?.message || error.message);
-      alert("Error: " + (error.response?.data?.message || error.message));
+      console.error("Auth failed:", error.response?.data?.message || error.message);
+      alert("Auth failed: " + (error.response?.data?.message || error.message));
     }
   };
+
 
 
   return (

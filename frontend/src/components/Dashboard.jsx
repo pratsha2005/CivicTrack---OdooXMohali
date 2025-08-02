@@ -1,30 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IssueCard } from './IssueCard';
 import { Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useEffect } from 'react';
+import axios from 'axios';
+import { getAllIssuesRoute } from '../utils/APIRoutes';
 
-
-
-
-
-
-export const Dashboard = ({onIssueClick }) => {
-
-  const [issues,setIssues] = useState([]);
-
+export const Dashboard = ({ onIssueClick }) => {
+  const [issues, setIssues] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(getAllIssuesRoute);
+        console.log("📦 Response data:", res.data);
+
+        if (Array.isArray(res.data.data)) {
+          setIssues(res.data.data);
+        } else if (Array.isArray(res.data.issues)) {
+          setIssues(res.data.issues);
+        } else {
+          console.error("❌ Unexpected data format:", res.data);
+          setIssues([]);
+        }
+      } catch (err) {
+        console.error("❌ Axios error:", err.response?.data || err.message);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const visibleIssues = issues.filter(issue => !issue.isHidden);
 
   const filteredIssues = visibleIssues.filter(issue => {
-    const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         issue.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const locationText = typeof issue.location === 'string' ? issue.location : '';
+    const matchesSearch =
+      issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      locationText.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
     const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -52,8 +72,6 @@ export const Dashboard = ({onIssueClick }) => {
     { value: 'resolved', label: 'Resolved' },
     { value: 'closed', label: 'Closed' }
   ];
-
-  
 
   return (
     <div className="space-y-8">
@@ -132,7 +150,7 @@ export const Dashboard = ({onIssueClick }) => {
         {filteredIssues.length > 0 ? (
           filteredIssues.map(issue => (
             <IssueCard
-              key={issue.id}
+              key={issue._id}
               issue={issue}
               onClick={() => onIssueClick(issue)}
             />

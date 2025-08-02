@@ -5,11 +5,11 @@ import dotenv from "dotenv";
 dotenv.config(); 
 
 const app = express();
-// cors middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN,
   credentials: true
 }));
+
 app.use(express.json({
     limit: '16kb'
 })) // to take data in form of json

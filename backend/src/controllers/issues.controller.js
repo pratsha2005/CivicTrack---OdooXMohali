@@ -44,12 +44,15 @@ const getAllIssues = asyncHandler(async (req, res) => {
     path: 'user',
     select: '-password'
   });
-
 })
 
 const getNearbyIssues = async (req, res) => {
   try {
-    const { lat, lng, radius } = req.query;
+    const user = req.user
+    const [lng, lat] = user.location.coordinates
+
+    const radius = req.body
+
     if (!lat || !lng || !radius) {
       return res.status(400).json({ error: "lat, lng, and radius are required" });
     }

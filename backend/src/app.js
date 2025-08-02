@@ -22,11 +22,11 @@ app.use(cookieParser())
 
 // routes import
 import userRouter from './routes/user.routes.js';
+import issueRouter from './routes/issues.route.js'
 
 // routes declaration
 app.use("/api/v1/users", userRouter) //not app.get() because
 // we have segragated routes and controller
-
-
+app.use("/api/v1/issues", issueRouter)
 
 export { app }

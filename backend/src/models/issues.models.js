@@ -13,7 +13,7 @@ const issuesSchema = mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Roads', 'Lighting', 'Water Supply', 'Cleanliness', 'Public Safety', 'Obstructions'],
+    enum: ['Roads', 'Lighting', 'Water Supply', 'Cleanliness', 'Public Safety', 'Others'],
     required: true
   },
   images: {

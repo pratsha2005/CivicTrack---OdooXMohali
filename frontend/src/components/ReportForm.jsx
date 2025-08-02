@@ -1,157 +1,220 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import { MapPin, Camera, Send } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import axios from 'axios';
+import { registerIssueRoute } from '../utils/APIRoutes';
 
-export const ReportForm = ({ onSubmit, user }) => {
+
+// Fix for marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function LocationMarker({ position, setPosition }) {
+  const map = useMap();
+
+  useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
+      map.setView(e.latlng); // pan map
+    }
+  });
+
+  useEffect(() => {
+    if (position) {
+      map.setView(position); // move to position on update
+    }
+  }, [position, map]);
+
+  return position ? <Marker position={position} /> : null;
+}
+
+export const ReportForm = ({ user }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'roads',
-    priority: 'medium',
-    location: ''
+    category: 'Roads',
+    location: '',
   });
 
-  const handleSubmit = (e) => {
+  const [mapPosition, setMapPosition] = useState(user?.location || { lat: 40.7128, lng: -74.0060 });
+  const [imageFiles, setImageFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageChange = (e) => {
+    setImageFiles([...e.target.files]);
+  };
+
+  const geocodeAddress = async () => {
+    try {
+      const response = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: {
+          q: formData.location,
+          format: 'json',
+          limit: 1
+        }
+      });
+
+      if (response.data.length === 0) {
+        toast.error('Could not find location. Please refine your address.');
+        return;
+      }
+
+      const { lat, lon } = response.data[0];
+      setMapPosition({ lat: parseFloat(lat), lng: parseFloat(lon) });
+      toast.success('Location found and marked on map.');
+    } catch (error) {
+      toast.error('Failed to fetch coordinates for address.');
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      reportedBy: user.name
-    });
-    setFormData({
-      title: '',
-      description: '',
-      category: 'roads',
-      priority: 'medium',
-      location: ''
-    });
+
+    if (!mapPosition) {
+      toast.error('Please select a location on the map.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const payload = new FormData();
+
+      payload.append('title', formData.title);
+      payload.append('description', formData.description);
+      payload.append('category', formData.category);
+      payload.append('location', formData.location);
+      payload.append('coordinates', JSON.stringify([mapPosition.lng, mapPosition.lat]));
+      payload.append('isAnonymous', 'false');
+      imageFiles.forEach((file) => payload.append('images', file));
+
+      await axios.post(registerIssueRoute, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Issue reported successfully!');
+      setFormData({
+        title: '',
+        description: '',
+        category: 'Roads',
+        location: '',
+      });
+      setImageFiles([]);
+      setMapPosition(user?.location || { lat: 40.7128, lng: -74.0060 });
+    } catch (err) {
+      toast.error('Failed to submit issue.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const categories = [
-    { value: 'roads', label: 'Roads & Transportation', icon: '🛣' },
-    { value: 'waste', label: 'Waste Management', icon: '🗑' },
-    { value: 'water', label: 'Water & Sewage', icon: '💧' },
-    { value: 'lighting', label: 'Street Lighting', icon: '💡' },
-    { value: 'parks', label: 'Parks & Recreation', icon: '🌳' },
-    { value: 'other', label: 'Other Issues', icon: '📋' }
-  ];
-
-  const priorities = [
-    { value: 'low', label: 'Low Priority', color: 'text-green-600' },
-    { value: 'medium', label: 'Medium Priority', color: 'text-yellow-600' },
-    { value: 'high', label: 'High Priority', color: 'text-orange-600' },
-    { value: 'urgent', label: 'Urgent', color: 'text-red-600' }
+    { value: 'Roads', label: 'Roads & Transportation', icon: '🛣' },
+    { value: 'Cleanliness', label: 'Waste Management', icon: '🗑' },
+    { value: 'Water Supply', label: 'Water & Sewage', icon: '💧' },
+    { value: 'Lighting', label: 'Street Lighting', icon: '💡' },
+    { value: 'Public Safety', label: 'Public Safety', icon: '🌳' },
+    { value: 'Others', label: 'Other Issues', icon: '📋' }
   ];
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Report an Issue</h2>
-          <p className="text-gray-600 mt-2">Help improve your community by reporting local issues</p>
-        </div>
-
+        <h2 className="text-2xl font-bold mb-6">Report an Issue</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Issue Title
-            </label>
+          <input
+            type="text"
+            required
+            placeholder="Issue title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            className="w-full border p-3 rounded"
+          />
+
+          <textarea
+            rows="4"
+            required
+            placeholder="Detailed description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="w-full border p-3 rounded"
+          />
+
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            className="w-full border p-3 rounded"
+          >
+            {categories.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex gap-2">
             <input
               type="text"
               required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Brief description of the issue"
+              placeholder="Location or landmark"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full border p-3 rounded"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {categories.map((category) => (
-                <button
-                  key={category.value}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, category: category.value })}
-                  className={`p-3 border rounded-lg text-left hover:bg-gray-50 transition-colors ${
-                    formData.category === category.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-300'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{category.icon}</div>
-                  <div className="text-sm font-medium">{category.label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Priority Level
-            </label>
-            <select
-              value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <button
+              type="button"
+              onClick={geocodeAddress}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              {priorities.map((priority) => (
-                <option key={priority.value} value={priority.value}>
-                  {priority.label}
-                </option>
+              Locate
+            </button>
+          </div>
+
+          <div className="h-64 border rounded overflow-hidden">
+            <MapContainer center={mapPosition} zoom={14} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <LocationMarker position={mapPosition} setPosition={setMapPosition} />
+            </MapContainer>
+          </div>
+
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+            className="mt-4"
+          />
+
+          {imageFiles.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              {imageFiles.map((file, index) => (
+                <img
+                  key={index}
+                  src={URL.createObjectURL(file)}
+                  alt={`preview-${index}`}
+                  className="w-full h-24 object-cover rounded border"
+                />
               ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Location
-            </label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                required
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Street address or nearby landmark"
-              />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Detailed Description
-            </label>
-            <textarea
-              required
-              rows={4}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Provide detailed information about the issue..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Photos (Optional)
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-              <Camera className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600">Click to upload photos</p>
-              <p className="text-xs text-gray-500">PNG, JPG up to 10MB each</p>
-            </div>
-          </div>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+            disabled={uploading}
+            className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700"
           >
-            <Send className="h-5 w-5" />
-            <span>Submit Report</span>
+            {uploading ? 'Uploading...' : 'Submit Report'}
           </button>
         </form>
       </div>

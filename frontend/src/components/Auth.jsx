@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { User, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 import axios from 'axios';
 import { loginUserRoute, registerUserRoute } from '../utils/APIRoutes';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export const Auth = ({ isLogin, onToggleMode }) => {
+export const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isLogin = location.pathname === '/login'; // Determine mode by route
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,10 +17,8 @@ export const Auth = ({ isLogin, onToggleMode }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const url = isLogin ? loginUserRoute : registerUserRoute;
-
       const response = await axios.post(url, formData);
       const { accessToken, refreshToken, user } = response.data.data;
 
@@ -26,19 +27,14 @@ export const Auth = ({ isLogin, onToggleMode }) => {
         localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
 
-        console.log("Auth successful");
-        navigate("/"); // ✅ Redirect to home
+        navigate("/"); // Redirect to dashboard/home
       } else {
-        console.error("No token received");
-        alert("Auth failed: No token received.");
+        alert("Authentication failed: No token received.");
       }
     } catch (error) {
-      console.error("Auth failed:", error.response?.data?.message || error.message);
-      alert("Auth failed: " + (error.response?.data?.message || error.message));
+      alert("Authentication failed: " + (error.response?.data?.message || error.message));
     }
   };
-
-
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
@@ -58,9 +54,7 @@ export const Auth = ({ isLogin, onToggleMode }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {!isLogin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
@@ -76,9 +70,7 @@ export const Auth = ({ isLogin, onToggleMode }) => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <input
@@ -93,9 +85,7 @@ export const Auth = ({ isLogin, onToggleMode }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <input
@@ -122,7 +112,7 @@ export const Auth = ({ isLogin, onToggleMode }) => {
           <p className="text-gray-600">
             {isLogin ? "Don't have an account?" : "Already have an account?"}
             <button
-              onClick={onToggleMode}
+              onClick={() => navigate(isLogin ? "/register" : "/login")}
               className="ml-2 text-blue-600 hover:text-blue-800 font-medium"
             >
               {isLogin ? 'Sign up' : 'Sign in'}

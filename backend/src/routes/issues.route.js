@@ -1,5 +1,7 @@
 import { Router } from "express";
-import { registerIssues, getAllIssues, getNearbyIssues, editIssueStatus} from "../controllers/issues.controller.js";
+import { registerIssues, getAllIssues, getNearbyIssues, editIssueStatus,
+reportIssue, getIssuesByUserId, editIssue, deleteIssue
+} from "../controllers/issues.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"; // 🆕
 
@@ -16,5 +18,8 @@ router
 router.route("/getAllIssues").get(getAllIssues);
 router.route("/getNearbyIssues").get(verifyJWT, getNearbyIssues);
 router.route("/editIssue/:issueId").post(editIssueStatus)
-
+router.route("editIssue/:id").post(editIssue)
+router.route("/reportIssue/:id").post(reportIssue)
+router.route("/getIssueByUserId").get(verifyJWT, getIssuesByUserId)
+router.route("/deleteIssue/:id").post(deleteIssue)
 export default router;

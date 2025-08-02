@@ -52,44 +52,66 @@ const registerIssues = asyncHandler(async (req, res) => {
   );
 });
 
-
 const getAllIssues = asyncHandler(async (req, res) => {
-  const issues = await Issue.find()
-  .populate({
-    path: 'user',
-    select: '-password'
-  });
-})
-
-const getNearbyIssues = async (req, res) => {
-  try {
-    const user = req.user
-    const [lng, lat] = user.location.coordinates
-
-    const radius = req.body
-
-    if (!lat || !lng || !radius) {
-      return res.status(400).json({ error: "lat, lng, and radius are required" });
-    }
-
-    const issues = await Issue.find({
-      location: {
-        $geoWithin: {
-          $centerSphere: [
-            [parseFloat(lng), parseFloat(lat)],
-            parseFloat(radius) / 6378.1 // Earth radius in km
-          ]
-        }
-      },
-      isHidden: false
+  const issues = await Issues.find()
+    .populate({
+      path: 'user',
+      select: '-passwordHash -email'
     });
 
-    res.status(200).json(issues);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch nearby issues" });
+  if (!issues) {
+    return res.status(404).json({ success: false, message: "No issues found" });
   }
-};
+
+  res.status(200).json({
+    success: true,
+    message: "All issues fetched successfully",
+    data: issues
+  });
+});
+
+
+const getNearbyIssues = asyncHandler(async (req, res) => {
+  const { radius } = req.query;
+
+  // ✅ Validate allowed radius values
+  const allowedRadius = [1, 3, 5];
+  const parsedRadius = parseFloat(radius);
+  if (!allowedRadius.includes(parsedRadius)) {
+    return res.status(400).json({
+      success: false,
+      message: "Radius must be one of 1, 3, or 5 km"
+    });
+  }
+
+  const user = await User.findById(req.user?._id);
+  if (!user || !user.location || !user.location.coordinates) {
+    return res.status(400).json({
+      success: false,
+      message: "User location not found"
+    });
+  }
+
+  const [lng, lat] = user.location.coordinates;
+
+  const issues = await Issues.find({
+    location: {
+      $geoWithin: {
+        $centerSphere: [
+          [lng, lat],
+          parsedRadius / 6378.1
+        ]
+      }
+    },
+    isHidden: false
+  });
+
+  res.status(200).json({
+    success: true,
+    count: issues.length,
+    data: issues
+  });
+});
 
 
 export {

@@ -1,36 +1,29 @@
 import React, { useState } from 'react';
 import { IssueCard } from './IssueCard';
-import {
-  Search,
-  Filter,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  AlertTriangle
-} from 'lucide-react';
+import { Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 
-export const Dashboard = ({ issues = [], onIssueClick }) => {
+export const Dashboard = ({ issues, onIssueClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  const filteredIssues = issues.filter((issue) => {
-    const matchesSearch =
-      issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.location.toLowerCase().includes(searchTerm.toLowerCase());
+  const visibleIssues = issues.filter(issue => !issue.isHidden);
 
+  const filteredIssues = visibleIssues.filter(issue => {
+    const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         issue.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || issue.category === selectedCategory;
     const matchesStatus = selectedStatus === 'all' || issue.status === selectedStatus;
-
+    
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const stats = {
-    total: issues.length,
-    reported: issues.filter((i) => i.status === 'reported').length,
-    inProgress: issues.filter((i) => i.status === 'in-progress').length,
-    resolved: issues.filter((i) => i.status === 'resolved').length
+    total: visibleIssues.length,
+    reported: visibleIssues.filter(i => i.status === 'reported').length,
+    inProgress: visibleIssues.filter(i => i.status === 'in-progress').length,
+    resolved: visibleIssues.filter(i => i.status === 'resolved').length
   };
 
   const categories = [
@@ -103,7 +96,7 @@ export const Dashboard = ({ issues = [], onIssueClick }) => {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {categories.map((category) => (
+            {categories.map(category => (
               <option key={category.value} value={category.value}>
                 {category.label}
               </option>
@@ -114,7 +107,7 @@ export const Dashboard = ({ issues = [], onIssueClick }) => {
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            {statuses.map((status) => (
+            {statuses.map(status => (
               <option key={status.value} value={status.value}>
                 {status.label}
               </option>
@@ -126,8 +119,12 @@ export const Dashboard = ({ issues = [], onIssueClick }) => {
       {/* Issues Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
         {filteredIssues.length > 0 ? (
-          filteredIssues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} onClick={() => onIssueClick(issue)} />
+          filteredIssues.map(issue => (
+            <IssueCard
+              key={issue.id}
+              issue={issue}
+              onClick={() => onIssueClick(issue)}
+            />
           ))
         ) : (
           <div className="text-center py-12">

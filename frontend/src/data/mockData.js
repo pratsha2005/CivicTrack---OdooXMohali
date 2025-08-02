@@ -1,7 +1,3 @@
-// mockData.js
-
-// import { Issue } from '../types';  // ❌ Remove TypeScript import
-
 export const mockIssues = [
   {
     id: '1',
@@ -17,21 +13,7 @@ export const mockIssues = [
     updatedAt: new Date('2024-01-20'),
     estimatedResolution: new Date('2024-01-25'),
     votes: 23,
-    comments: [
-      {
-        id: '1',
-        author: 'City Works Dept',
-        content: 'We have scheduled repair work for this pothole. Crew will be dispatched by January 25th.',
-        createdAt: new Date('2024-01-18'),
-        isOfficial: true
-      },
-      {
-        id: '2',
-        author: 'Mike Chen',
-        content: 'This pothole damaged my tire yesterday. Thanks for reporting!',
-        createdAt: new Date('2024-01-19')
-      }
-    ]
+    isHidden: false
   },
   {
     id: '2',
@@ -45,7 +27,7 @@ export const mockIssues = [
     reportedAt: new Date('2024-01-22'),
     updatedAt: new Date('2024-01-22'),
     votes: 15,
-    comments: []
+    isHidden: false
   },
   {
     id: '3',
@@ -60,15 +42,7 @@ export const mockIssues = [
     updatedAt: new Date('2024-01-18'),
     actualResolution: new Date('2024-01-18'),
     votes: 31,
-    comments: [
-      {
-        id: '3',
-        author: 'Water Department',
-        content: 'Leak has been repaired. Thank you for the quick report!',
-        createdAt: new Date('2024-01-18'),
-        isOfficial: true
-      }
-    ]
+    isHidden: false
   },
   {
     id: '4',
@@ -82,7 +56,7 @@ export const mockIssues = [
     reportedAt: new Date('2024-01-21'),
     updatedAt: new Date('2024-01-21'),
     votes: 8,
-    comments: []
+    isHidden: false
   },
   {
     id: '5',
@@ -97,14 +71,23 @@ export const mockIssues = [
     updatedAt: new Date('2024-01-21'),
     estimatedResolution: new Date('2024-01-28'),
     votes: 19,
-    comments: [
-      {
-        id: '4',
-        author: 'Parks & Recreation',
-        content: 'Safety inspection completed. Replacement parts ordered.',
-        createdAt: new Date('2024-01-21'),
-        isOfficial: true
-      }
-    ]
+    isHidden: false
+  }
+];
+
+export const mockUsers = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'john.doe@email.com',
+    reportCount: 3,
+    joinedAt: new Date('2024-01-01')
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    reportCount: 1,
+    joinedAt: new Date('2024-01-10')
   }
 ];

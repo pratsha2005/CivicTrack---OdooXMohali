@@ -14,9 +14,12 @@
 
 ## Screenshots
 
-![Register Page](./Screenshots/1.jpg)
-
-
+![Register Page](./Screenshots/1.png)
+![Register Page](./Screenshots/2.png)
+![Register Page](./Screenshots/3.png)
+![Register Page](./Screenshots/4.png)
+![Register Page](./Screenshots/5.png)
+![Register Page](./Screenshots/6.png)
 
 ## 🚀 Features
 

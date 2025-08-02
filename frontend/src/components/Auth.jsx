@@ -1,17 +1,41 @@
 import React, { useState } from 'react';
 import { User, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
+import axios from 'axios';
+import { loginUserRoute, registerUserRoute } from '../utils/APIRoutes';
 
-export const Auth = ({ isLogin, onSubmit, onToggleMode }) => {
+export const Auth = ({ isLogin, onToggleMode }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    try {
+      const route = isLogin ? loginUserRoute : registerUserRoute;
+      const payload = isLogin
+        ? { email: formData.email, password: formData.password }
+        : formData;
+
+      const response = await axios.post(route, payload);
+
+      const { accessToken, user } = response.data.data;
+
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("Success! You're logged in.");
+      } else {
+        console.error("No access token received.");
+      }
+    } catch (error) {
+      console.error("Authentication failed:", error.response?.data?.message || error.message);
+      alert("Error: " + (error.response?.data?.message || error.message));
+    }
   };
+
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
